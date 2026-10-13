@@ -27,10 +27,15 @@ arrive through a weekly scheduled task and land on a review branch; see
 - The mode: `~/.claude/pstack/skills/poteto-mode/SKILL.md`.
 - A playbook `playbooks/x.md` is `~/.claude/pstack/skills/poteto-mode/playbooks/x.md`.
 - Any bundled skill **name** (`how`, `why`, `swarm`, `principle-x`, ...) is
-  `~/.claude/pstack/skills/<name>/SKILL.md`. These are **not** registered as
-  Claude skills. Read the file instead of calling the Skill tool. A user typing
-  `/how` or `/interrogate` outside poteto mode gets nothing; they say "run the
-  how skill" inside poteto mode instead.
+  `~/.claude/pstack/skills/<name>/SKILL.md`. Every bundled skill is also
+  registered as `/pstack:<name>` through the `pstack` plugin.
+  `scripts/build-plugin.mjs` generates that plugin into the `local-plugins`
+  marketplace at `~/.claude/local-marketplace`, and `scripts/install.sh` runs
+  it. Install the plugin once with `claude plugin install pstack@local-plugins`.
+  Inside a run, the model still reads the file and never calls the Skill tool.
+  Each wrapper copies its skill's frontmatter, and `disable-model-invocation: true`
+  there keeps the skill out of model invocation. `setup-pstack` has no such
+  line, so it is the one wrapper the model can invoke.
 - Agents: `~/.claude/agents/poteto-agent.md` and `comment-sicko.md`, installed from
   `port/agents/`.
 - Model roles: `~/.claude/pstack/models.md` (section 3).

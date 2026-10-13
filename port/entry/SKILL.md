@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Poteto mode on Claude Code
 
-The bundle lives at `~/.claude/pstack/`. Its ~55 skills are files there, not registered Claude skills, so they don't flood skill routing.
+The bundle lives at `~/.claude/pstack/`. Its ~55 skills are files there, not registered Claude skills, so they don't flood skill routing. The user can also run each one as `/pstack:<name>` through the `pstack` plugin.
 
 **Read these two files in full, in this order, before anything else:**
 
