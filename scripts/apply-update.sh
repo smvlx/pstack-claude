@@ -9,10 +9,9 @@ git -C "$WT" diff --quiet && git -C "$WT" diff --cached --quiet || { echo "$WT h
 [ -z "$(git -C "$WT" diff --name-only --diff-filter=U)" ] || { echo "unresolved conflicts in $WT" >&2; exit 1; }
 [ -f "$WT/UPSTREAM-VERSION.pending" ] || { echo "missing UPSTREAM-VERSION.pending" >&2; exit 1; }
 node "$WT/scripts/check-port.mjs" >/dev/null || { echo "gate fails on $BR; run node $WT/scripts/check-port.mjs" >&2; exit 1; }
-if git -C "$WT" ls-files --error-unmatch UPSTREAM-VERSION.pending >/dev/null 2>&1 || [ -f "$WT/UPSTREAM-VERSION.pending" ]; then
-  mv "$WT/UPSTREAM-VERSION.pending" "$WT/UPSTREAM-VERSION"; rm -f "$WT/UPDATE-SUMMARY.md"
-  git -C "$WT" add -A && git -C "$WT" -c user.email=local@local -c user.name=pstack-updater commit -qm "record upstream $(cut -d' ' -f2 "$WT/UPSTREAM-VERSION") @ $(cut -c1-11 "$WT/UPSTREAM-VERSION")"
-fi
+mv "$WT/UPSTREAM-VERSION.pending" "$WT/UPSTREAM-VERSION"; rm -f "$WT/UPDATE-SUMMARY.md"
+git -C "$WT" add -A
+git -C "$WT" diff --cached --quiet || git -C "$WT" -c user.email=local@local -c user.name=pstack-updater commit -qm "record upstream $(cut -d' ' -f2 "$WT/UPSTREAM-VERSION") @ $(cut -c1-11 "$WT/UPSTREAM-VERSION")"
 git -C "$PSTACK" merge -q --ff-only "$BR"
 "$PSTACK/scripts/install.sh"
 git -C "$PSTACK" worktree remove --force "$WT"
