@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
 const root = join(import.meta.dirname, "..");
@@ -39,6 +41,18 @@ for (const file of walk(root)) {
     for (const [re, label] of banned) if (re.test(line)) { failures++; console.log(`FAIL ${where}  ${label}: ${line.trim().slice(0, 140)}`); }
     if (/\bCursor\b/.test(line)) { warnings++; console.log(`warn ${where}  mentions Cursor: ${line.trim().slice(0, 140)}`); }
   });
+}
+
+const skillCount = (dir) => readdirSync(dir).filter((name) => existsSync(join(dir, name, "SKILL.md"))).length;
+const tmp = mkdtempSync(join(tmpdir(), "pstack-plugin-"));
+try {
+  const build = spawnSync(process.execPath, [join(root, "scripts", "build-plugin.mjs")], { encoding: "utf8", env: { ...process.env, PSTACK: root, CLAUDE_DIR: tmp } });
+  const want = skillCount(join(root, "skills"));
+  const got = build.status === 0 ? skillCount(join(tmp, "local-marketplace", "plugins", "pstack", "skills")) : 0;
+  if (build.status !== 0) { failures++; console.log(`FAIL scripts/build-plugin.mjs exited ${build.status}: ${build.stderr.trim()}`); }
+  else if (got !== want) { failures++; console.log(`FAIL scripts/build-plugin.mjs built ${got} wrappers for ${want} skills`); }
+} finally {
+  rmSync(tmp, { recursive: true, force: true });
 }
 console.log(`\n${failures} failure(s), ${warnings} Cursor mention(s) to eyeball.`);
 process.exit(failures ? 1 : 0);
