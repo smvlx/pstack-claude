@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { homedir } from "node:os";
 
 const root = join(import.meta.dirname, "..");
-const extraFiles = ["agents/poteto-agent.md", "agents/comment-sicko.md", "skills/poteto-mode/SKILL.md"].map((p) => join(homedir(), ".claude", p));
-const skipDirs = new Set([".git", "node_modules", "docs", "automations", "agents"]);
-const skipFiles = new Set(["CLAUDE-PORT.md", "README.md", "check-port.mjs", "plugin.json", "LICENSE"]);
+const skipDirs = new Set([".git", "node_modules", "docs", "automations"]);
+const skipUpstreamAgents = join(root, "agents");
+const skipFiles = new Set(["CLAUDE-PORT.md", "README.md", "UPDATING.md", "check-port.mjs", "plugin.json", "LICENSE"]);
 
 const banned = [
   [/\bTask tool\b|\bTask\(|`Task` call/, "Cursor Task tool (use the Agent tool)"],
@@ -28,13 +27,13 @@ const banned = [
 function* walk(dir) {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) { if (!skipDirs.has(name)) yield* walk(p); }
+    if (statSync(p).isDirectory()) { if (!skipDirs.has(name) && p !== skipUpstreamAgents) yield* walk(p); }
     else if (!skipFiles.has(name) && /\.(md|mjs|ts|sh|yaml|json)$/.test(name)) yield p;
   }
 }
 
 let failures = 0, warnings = 0;
-for (const file of [...walk(root), ...extraFiles]) {
+for (const file of walk(root)) {
   readFileSync(file, "utf8").split("\n").forEach((line, i) => {
     const where = `${relative(root, file)}:${i + 1}`;
     for (const [re, label] of banned) if (re.test(line)) { failures++; console.log(`FAIL ${where}  ${label}: ${line.trim().slice(0, 140)}`); }
