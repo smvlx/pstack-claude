@@ -22,7 +22,7 @@ For each fact the change's safety depends on, get it as far down this list as is
 
 1. You said so. Worthless on its own.
 2. You pointed at the line. A real `file:line`, or the library's own source.
-3. You showed the bad case can't happen. You walked the failure step by step and it doesn't reach.
+3. You showed the bad case can't happen. You walked the failure through each step and it doesn't reach.
 4. You ran it. A script or test that calls the real code and fails loud if you're wrong.
 5. You reproduced it in the running app.
 

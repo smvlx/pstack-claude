@@ -20,7 +20,7 @@ Other explorers are investigating different slices of the same subsystem in para
 The key types, services, classes, and abstractions. For each: name, file path, and a one-sentence description of what it does.
 
 ### Flow
-The execution flow step by step. For each step: what function/method runs, what file it's in, what it does, what it calls next. Include the data that flows between steps.
+The execution flow, in order. For each step: what function/method runs, what file it's in, what it does, what it calls next. Include the data that flows between steps.
 
 ### Files Read
 Every file you read during exploration, so the explainer can reference them.

@@ -20,3 +20,4 @@ arena cross-judge pool: inherit, codex
 swarm workers: sonnet
 architect runners: inherit, sonnet
 interrogate reviewers: inherit, codex
+recall explorers: sonnet

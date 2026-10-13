@@ -30,6 +30,7 @@ whole port.
   how skill" inside poteto mode instead.
 - Agents: `~/.claude/agents/poteto-agent.md` and `~/.claude/agents/comment-sicko.md`.
 - Model roles: `~/.claude/pstack/models.md` (section 3).
+- `docs/guide/`, `automations/`, `README.md` and `agents/` are kept as upstream reference and still describe Cursor. Don't follow their install or setup steps.
 
 ## 2. Subagents
 
@@ -44,7 +45,9 @@ whole port.
   - `is_background: true` is `run_in_background: true`.
   - Continue a running agent with **SendMessage** to its name or ID.
 - **Every agent that writes files gets `isolation: "worktree"`.** Two writers
-  never share a checkout. Never `git stash` across agents; the stash is global.
+  never share a checkout. One exception: `comment-sicko` (the **no-comments** skill)
+  edits uncommitted changes in place, so it runs in the current checkout, alone,
+  with no other writer active there. Never `git stash` across agents; the stash is global.
 - Subagents cannot spawn subagents in every configuration. If a delegate's
   Agent call fails, it does the lane itself sequentially and says so.
 

@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Every spawn is a Task subagent with `subagent_type: generalPurpose` and `readonly: true`. Explorers use the `how explorer` line in the `pstack-models.mdc` rule (default `grok-4.7-xhigh-fast`), and every explainer uses the `how explainer` line (default `claude-opus-5-5-xhigh`). Set `model` to that line's value, or to the default if the rule or the line is missing. Leave `model` unset when the value is `auto` or `inherit-parent`. If the Task tool rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from its error message.
+Spawn every subagent with the Agent tool. Explorers use `subagent_type: "Explore"`; the explainer uses `subagent_type: "general-purpose"` with "Do not edit files." in its prompt. Explorers use the `how explorer` line in `~/.claude/pstack/models.md` (default `sonnet`), and every explainer uses the `how explainer` line (default `inherit`). Omit `model` for `inherit`, and pass `opus`, `sonnet`, `haiku` or `fable` as `model`. A `codex` entry runs that same filled prompt through the Codex CLI instead of the Agent tool, read-only, per `CLAUDE-PORT.md` section 3 (Bash with `run_in_background: true`, alongside the Agent calls); if codex fails, rerun that slot on `inherit` and say so. Use the default if the file or the line is missing. Any other value falls back to `inherit`; say so.
 
 ## 1. Assess complexity
 

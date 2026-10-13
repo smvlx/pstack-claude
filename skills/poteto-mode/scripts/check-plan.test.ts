@@ -50,10 +50,10 @@ Close.
 Recorded.
 `;
 
-const runPlan = (example: string, expectedExit: number) => {
+const runPlan = (example: string, expectedExit: number, plan = validPlan) => {
 	const directory = mkdtempSync(join(tmpdir(), "check-plan-test-"));
 	const file = join(directory, "plan.md");
-	writeFileSync(file, validPlan + example);
+	writeFileSync(file, plan + example);
 	try {
 		const result = spawnSync("node", [checker, file], { encoding: "utf8" });
 		expect(result.status).toBe(expectedExit);
@@ -93,4 +93,10 @@ test("rejects headings and prose outside a proper close", () => {
 test("rejects backtick info strings containing a backtick", () => {
 	const result = runPlan("```markdown `invalid`\n## Example only\n```\n", 1);
 	expect(result.stderr).toContain('"## Example only" after Close the program is not an appendix');
+});
+
+test("accepts a local pstack skill read or the upstream git show as the skill-read marker", () => {
+	runPlan("", 0, validPlan.replace("`git show origin/main:`", "`~/.claude/pstack/skills/how/SKILL.md`"));
+	const missing = runPlan("", 1, validPlan.replace("`git show origin/main:`", "skills"));
+	expect(missing.stderr).toContain('Program checklist lacks "~/.claude/pstack/" or "git show origin/main:"');
 });

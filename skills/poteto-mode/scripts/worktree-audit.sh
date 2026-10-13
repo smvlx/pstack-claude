@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Read-only worktree prune audit. Classifies every git worktree by size, merge
-# state, uncommitted work, remote/PR state, and the most recent chat that
-# operated in it. Emits a table sorted by size with a suggested bucket. Never
+# Read-only worktree prune audit. Classifies every git worktree by kind
+# (agent = a Claude Code subagent worktree under .claude/worktrees/agent-*,
+# else user), size, merge state, uncommitted work, remote/PR state, and the
+# most recent Claude Code session that operated in it. Emits a table sorted by size with a suggested bucket. Never
 # deletes anything; deletion stays a human-gated step in the playbook.
 #
 # Usage: worktree-audit.sh [-b|--base <ref>] [repo-path]
@@ -52,18 +53,23 @@ prs=$(mktemp)
 gh pr list --author "@me" --state all --limit 1000 \
 	--json number,state,headRefName 2>/dev/null > "$prs" || echo "[]" > "$prs"
 
-# Transcripts dir: ~/.cursor/projects/<slugified-repo-path>/agent-transcripts.
-slug=$(printf '%s' "$main_wt" | sed 's#^/##; s#/#-#g')
-transcripts="$HOME/.cursor/projects/$slug/agent-transcripts"
+# Claude Code transcripts: ~/.claude/projects/<slug>/<session-id>.jsonl, with
+# subagent transcripts under <session-id>/subagents/. The slug is the absolute
+# workspace path with every / and . replaced by -.
+slug() { printf '%s' "$1" | sed 's#[/.]#-#g'; }
+transcripts="$HOME/.claude/projects/$(slug "$main_wt")"
 now=$(date +%s)
+if command -v rg >/dev/null 2>&1; then search=(rg -l -F --glob "*.jsonl")
+else search=(grep -rlF --include="*.jsonl"); fi
 
 echo "# base: $base"
-printf "SIZE\tAGE\tMERGED\tDIRTY\tREMOTE\tPR\tLAST_CHAT\tBUCKET\tWORKTREE\n"
+printf "SIZE\tKIND\tAGE\tMERGED\tDIRTY\tREMOTE\tPR\tLAST_CHAT\tBUCKET\tWORKTREE\n"
 
 git worktree list --porcelain | awk '/^worktree /{print $2}' | while read -r wt; do
 	[ "$wt" = "$main_wt" ] && continue
 
 	size=$(du -sh "$wt" 2>/dev/null | awk '{print $1}')
+	case "$wt" in */.claude/worktrees/agent-*) kind=agent ;; *) kind=user ;; esac
 	head=$(git -C "$wt" rev-parse HEAD 2>/dev/null)
 	head_ts=$(git -C "$wt" log -1 --format='%ct' HEAD 2>/dev/null || echo 0)
 	age=$([ "$head_ts" -gt 0 ] 2>/dev/null && echo "$(( (now - head_ts) / 86400 ))d" || echo "?")
@@ -91,12 +97,17 @@ git worktree list --porcelain | awk '/^worktree /{print $2}' | while read -r wt;
 		'.[] | select(.headRefName==$b) | "#\(.number)/\(.state)"' "$prs" 2>/dev/null | head -1)
 	[ -z "$pr" ] && pr="-"
 
-	# Most recent chat whose transcript operated in this worktree. Match path
+	# Most recent session whose transcript operated in this worktree: the main
+	# repo's sessions plus sessions opened inside the worktree itself. Match path
 	# followed by "/" or a quote so glint-482 does not match glint-482-r37.
 	last="-"; last_ts=0
-	if [ -d "$transcripts" ]; then
-		f=$(rg -l -e "${wt}/" -e "${wt}\"" "$transcripts" 2>/dev/null \
-			| xargs stat -f '%m %N' 2>/dev/null | sort -rn | head -1)
+	dirs=""
+	for d in "$transcripts" "$HOME/.claude/projects/$(slug "$wt")"; do
+		[ -d "$d" ] && dirs="$dirs$d"$'\n'
+	done
+	if [ -n "$dirs" ]; then
+		f=$(printf '%s' "$dirs" | tr '\n' '\0' | xargs -0 "${search[@]}" -e "${wt}/" -e "${wt}\"" 2>/dev/null \
+			| tr '\n' '\0' | xargs -0 stat -f '%m %N' 2>/dev/null | sort -rn | head -1)
 		if [ -n "$f" ]; then last_ts=$(echo "$f" | awk '{print $1}')
 			last=$(date -r "$last_ts" '+%Y-%m-%d' 2>/dev/null); fi
 	fi
@@ -110,8 +121,8 @@ git worktree list --porcelain | awk '/^worktree /{print $2}' | while read -r wt;
 		esac ;;
 	esac
 
-	printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-		"$size" "$age" "$merged" "$dirty" "$remote" "$pr" "$last" "$bucket" "$wt"
+	printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+		"$size" "$kind" "$age" "$merged" "$dirty" "$remote" "$pr" "$last" "$bucket" "$wt"
 done | sort -t$'\t' -k1,1 -rh
 
 rm -f "$prs"

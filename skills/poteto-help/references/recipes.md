@@ -1,6 +1,6 @@
 # Prompts worth copying
 
-Swap in the real paths, skills, and done checks. Informal wording works.
+Swap in the real paths, skills, and done checks. Informal wording works. On Claude Code only `/poteto-mode` is a slash command, so a bundled skill written as `/how` below means "run the how skill" inside a `/poteto-mode` prompt.
 
 ## Understand
 

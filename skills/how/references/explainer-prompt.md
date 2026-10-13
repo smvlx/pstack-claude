@@ -33,7 +33,7 @@ Use this structure, adapted to what makes sense for the question. Not every sect
 The important types, services, or abstractions needed to follow the rest. Brief definitions, not exhaustive.
 
 ### How It Works
-The core of the explanation, and the longest section. Walk through the flow: what triggers it, what happens step by step, where data goes, what the decision points are.
+The core of the explanation, and the longest section. Walk through the flow: what triggers it, what happens at each step, where data goes, what the decision points are.
 
 Use prose, not pseudocode. Reference specific files and functions so the reader knows where to look, but don't dump large code blocks unless a snippet is essential to a point.
 
