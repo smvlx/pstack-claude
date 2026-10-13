@@ -13,14 +13,17 @@ after editing anything in the bundle:
 node ~/.claude/pstack/scripts/check-port.mjs
 ```
 
-Upstream: `cursor/plugins` `pstack/`, version 0.15.21, commit `1dcc2bacde7`
-(2026-10-12). `~/.claude/pstack` is a local git repo whose first commit is the
-untouched upstream, so `git -C ~/.claude/pstack diff <first-commit>` shows the
-whole port.
+Upstream: `cursor/plugins` `pstack/`. `UPSTREAM-VERSION` records the sha and
+version the port is based on. `~/.claude/pstack` is a local git repo: branch
+`upstream` holds vanilla snapshots, `main` is the port, so
+`git -C ~/.claude/pstack diff upstream main` shows the whole port. Updates
+arrive through a weekly scheduled task and land on a review branch; see
+`UPDATING.md`.
 
 ## 1. Where things live
 
-- Entry point: `~/.claude/skills/poteto-mode/SKILL.md` (`/poteto-mode`).
+- Entry point: `~/.claude/skills/poteto-mode/SKILL.md` (`/poteto-mode`), installed
+  from `port/entry/` by `scripts/install.sh`. Edit the repo copy, not the live one.
 - The mode: `~/.claude/pstack/skills/poteto-mode/SKILL.md`.
 - A playbook `playbooks/x.md` is `~/.claude/pstack/skills/poteto-mode/playbooks/x.md`.
 - Any bundled skill **name** (`how`, `why`, `swarm`, `principle-x`, ...) is
@@ -28,7 +31,8 @@ whole port.
   Claude skills. Read the file instead of calling the Skill tool. A user typing
   `/how` or `/interrogate` outside poteto mode gets nothing; they say "run the
   how skill" inside poteto mode instead.
-- Agents: `~/.claude/agents/poteto-agent.md` and `~/.claude/agents/comment-sicko.md`.
+- Agents: `~/.claude/agents/poteto-agent.md` and `comment-sicko.md`, installed from
+  `port/agents/`.
 - Model roles: `~/.claude/pstack/models.md` (section 3).
 - `docs/guide/`, `automations/`, `README.md` and `agents/` are kept as upstream reference and still describe Cursor. Don't follow their install or setup steps.
 
