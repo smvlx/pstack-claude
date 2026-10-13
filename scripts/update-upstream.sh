@@ -3,8 +3,8 @@
 # Exit 0: up to date (or an update branch for this sha already exists). 10: update ready, clean.
 # 20: update needs porting (merge conflicts, gate failures, or test failures). 1: error.
 set -euo pipefail
-PSTACK="$HOME/.claude/pstack"
-WT="$HOME/.claude/pstack-update"
+PSTACK="${PSTACK:-$HOME/.claude/pstack}"
+WT="${PSTACK_UPDATE_WT:-$HOME/.claude/pstack-update}"
 BUN="${BUN:-$HOME/.bun/bin/bun}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"; git -C "$PSTACK" worktree remove --force "$TMP/up-wt" 2>/dev/null || true' EXIT

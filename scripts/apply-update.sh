@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Applies a reviewed update branch: fast-forwards main, installs entry skill and agents, cleans up.
 set -euo pipefail
-PSTACK="$HOME/.claude/pstack"
-WT="$HOME/.claude/pstack-update"
+PSTACK="${PSTACK:-$HOME/.claude/pstack}"
+WT="${PSTACK_UPDATE_WT:-$HOME/.claude/pstack-update}"
 BR="$(git -C "$WT" branch --show-current)"
 case "$BR" in update/*) ;; *) echo "no update branch at $WT" >&2; exit 1;; esac
 git -C "$WT" diff --quiet && git -C "$WT" diff --cached --quiet || { echo "$WT has uncommitted changes" >&2; exit 1; }
