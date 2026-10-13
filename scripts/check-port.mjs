@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+import { homedir } from "node:os";
+
+const root = join(import.meta.dirname, "..");
+const extraFiles = ["agents/poteto-agent.md", "agents/comment-sicko.md", "skills/poteto-mode/SKILL.md"].map((p) => join(homedir(), ".claude", p));
+const skipDirs = new Set([".git", "node_modules", "docs", "automations", "agents"]);
+const skipFiles = new Set(["CLAUDE-PORT.md", "README.md", "check-port.mjs", "plugin.json", "LICENSE"]);
+
+const banned = [
+  [/\bTask tool\b|\bTask\(|`Task` call/, "Cursor Task tool (use the Agent tool)"],
+  [/generalPurpose/, "generalPurpose (use general-purpose)"],
+  [/grok-\d/, "Grok model slug"],
+  [/claude-opus-\d-\d-(xhigh|max|high|medium|low)/, "Cursor Claude slug"],
+  [/environment:\s*"?cloud/, "cloud environment (use isolation: \"worktree\")"],
+  [/cloud[- ]agent/i, "cloud agent"],
+  [/\bgt (log|info|sync|submit|metadata|tracking|restack|create|modify|ran|knows|arguments|track)\b|Graphite/, "Graphite"],
+  [/\borigin (pr|stack)\b|Origin CLI/, "Origin CLI"],
+  [/pstack-models\.mdc|\.cursor\//, "Cursor rule or path"],
+  [/\bAskQuestion\b/, "AskQuestion (use AskUserQuestion)"],
+  [/readonly: true/, "readonly flag"],
+  [/cursor-team-kit|control-ui|control-cli|\bdeslop\b/, "cursor-team-kit skill"],
+  [/agent-transcripts/, "Cursor transcript dir"],
+  [/think (carefully|hard)|step by step/i, "banned prompt phrase"],
+];
+
+function* walk(dir) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) { if (!skipDirs.has(name)) yield* walk(p); }
+    else if (!skipFiles.has(name) && /\.(md|mjs|ts|sh|yaml|json)$/.test(name)) yield p;
+  }
+}
+
+let failures = 0, warnings = 0;
+for (const file of [...walk(root), ...extraFiles]) {
+  readFileSync(file, "utf8").split("\n").forEach((line, i) => {
+    const where = `${relative(root, file)}:${i + 1}`;
+    for (const [re, label] of banned) if (re.test(line)) { failures++; console.log(`FAIL ${where}  ${label}: ${line.trim().slice(0, 140)}`); }
+    if (/\bCursor\b/.test(line)) { warnings++; console.log(`warn ${where}  mentions Cursor: ${line.trim().slice(0, 140)}`); }
+  });
+}
+console.log(`\n${failures} failure(s), ${warnings} Cursor mention(s) to eyeball.`);
+process.exit(failures ? 1 : 0);
