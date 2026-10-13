@@ -33,9 +33,8 @@ arrive through a weekly scheduled task and land on a review branch; see
   marketplace at `~/.claude/local-marketplace`, and `scripts/install.sh` runs
   it. Install the plugin once with `claude plugin install pstack@local-plugins`.
   Inside a run, the model still reads the file and never calls the Skill tool.
-  Each wrapper copies its skill's frontmatter, and `disable-model-invocation: true`
-  there keeps the skill out of model invocation. `setup-pstack` has no such
-  line, so it is the one wrapper the model can invoke.
+  The generator sets `disable-model-invocation: true` on every wrapper, which
+  keeps all of them slash-only.
 - Agents: `~/.claude/agents/poteto-agent.md` and `comment-sicko.md`, installed from
   `port/agents/`.
 - Model roles: `~/.claude/pstack/models.md` (section 3).
