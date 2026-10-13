@@ -5,6 +5,7 @@ PSTACK="${PSTACK:-$HOME/.claude/pstack}"
 WT="${PSTACK_UPDATE_WT:-$HOME/.claude/pstack-update}"
 BR="$(git -C "$WT" branch --show-current)"
 case "$BR" in update/*) ;; *) echo "no update branch at $WT" >&2; exit 1;; esac
+git -C "$PSTACK" diff --quiet && git -C "$PSTACK" diff --cached --quiet || { echo "$PSTACK has uncommitted changes" >&2; exit 1; }
 git -C "$WT" diff --quiet && git -C "$WT" diff --cached --quiet || { echo "$WT has uncommitted changes" >&2; exit 1; }
 [ -z "$(git -C "$WT" diff --name-only --diff-filter=U)" ] || { echo "unresolved conflicts in $WT" >&2; exit 1; }
 [ -f "$WT/UPSTREAM-VERSION.pending" ] || { echo "missing UPSTREAM-VERSION.pending" >&2; exit 1; }
