@@ -15,7 +15,7 @@ const banned = [
   [/grok-\d/, "Grok model slug"],
   [/cursor-grok-|composer-\d|\bcomposer-\*/, "Cursor model family"],
   [/inherit-parent|\bauto` or `inherit/, "Cursor model alias (use inherit)"],
-  [/fast or standard speed|-fast\b/, "Cursor per-spawn speed (no Claude Code equivalent)"],
+  [/fast or standard speed|(max|xhigh|high|medium|low)-fast\b/, "Cursor per-spawn speed (no Claude Code equivalent)"],
   [/claude-opus-\d-\d-(xhigh|max|high|medium|low)/, "Cursor Claude slug"],
   [/environment:\s*"?cloud/, "cloud environment (use isolation: \"worktree\")"],
   [/cloud[- ]agent/i, "cloud agent"],
