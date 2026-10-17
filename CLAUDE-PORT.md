@@ -39,6 +39,7 @@ arrive through a weekly scheduled task and land on a review branch; see
   `port/agents/`.
 - Model roles: `~/.claude/pstack/models.md` (section 3).
 - `docs/guide/`, `automations/`, `README.md` and `agents/` are kept as upstream reference and still describe Cursor. Don't follow their install or setup steps.
+- `docs/harness/claude-code.md` is upstream's own adapter for its marketplace plugin (`/pstack:poteto-mode` from `cursor/plugins`). This port does not use it. Where it and this file disagree, this file wins.
 
 ## 2. Subagents
 

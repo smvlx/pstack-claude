@@ -12,7 +12,7 @@ Three rules carry the rest.
 
 #### Roles and placement
 
-- **Coordinator (this chat).** Local. Frames, authors briefs, drains the inbox, owns the human report, makes judgment calls. It never authors or edits code. Conflicted merges, restacks, and code changes are always tasks. Mechanically landing a verified unit (fast-forward or clean cherry-pick of a worker's commit, then push) is bookkeeping the coordinator may do itself on repos where local git is cheap, and only when the user explicitly asked for merging in this session. Queueing finished work behind an idle stacker is how a deadline harvests nothing. The loop is agentic end to end. Agents are spawned and drained only through the Agent tool, and resumed only through SendMessage. State reads and writes go through `scripts/orch/orch.ts` at drain points, one command in and one line out. The CLI never spawns, waits, or wakes anything.
+- **Coordinator (this chat).** Local. Frames, authors briefs, drains the inbox, owns the human report, makes judgment calls. It never authors or edits code. Conflicted merges, chain rebases, and code changes are always tasks. Mechanically landing a verified unit (fast-forward or clean cherry-pick of a worker's commit, then push) is bookkeeping the coordinator may do itself on repos where local git is cheap, and only when the user explicitly asked for merging in this session. Queueing finished work behind an idle stacker is how a deadline harvests nothing. The loop is agentic end to end. Agents are spawned and drained only through the Agent tool, and resumed only through SendMessage. State reads and writes go through `scripts/orch/orch.ts` at drain points, one command in and one line out. The CLI never spawns, waits, or wakes anything.
 - **Sub-coordinator.** A background Agent call, durable, one per track, and only when the program exceeds what one coordinator's drains can manage. A track the coordinator can drain itself needs no middle layer. Each nested layer re-pays a full orientation preamble, and a blocking sub-coordinator hides its children while the parent idles. Owns its track's units and boards, authors its workers' briefs, spawns its own workers and verifiers through the Agent tool where nested spawning works in this configuration. If its Agent call fails, it says so in its rollup and the coordinator spawns that track's workers directly. Rolls up aggregates at wave boundaries. Never forwards raw child reports. Cap in-flight children at what one drain can process, roughly ten, as a rolling window. Never as blocking batches, which cost the slowest child of every batch.
 - **Worker / verifier.** Always an Agent call with `isolation: "worktree"` and `run_in_background: true`, `subagent_type: "poteto-agent"`, on the model from the matching role line in `~/.claude/pstack/models.md`. Every agent runs on this machine, so runtime verification goes through the built-in browser tools (`preview_start`, `read_page`, `computer`) or Bash, and local transcripts under `~/.claude/projects/<slug>/`, simulators, and local auth are all reachable. Briefs still inline what a worker needs or point at repo and store paths, because a worker cannot see this chat. Prefer fewer, broader workers. One writer per worktree or branch (principle-separate-before-serializing-shared-state). Run a unit's verifier on a different model family from its worker, which means a `codex` slot, read-only, per `CLAUDE-PORT.md` section 3. A verifier that must write or drive a UI runs as a Claude agent, and the ledger row says the verdict is same-family.
 
@@ -43,7 +43,8 @@ CONTEXT      pointers to files and PRs; upstream reports pasted in full when thi
 ACCEPTANCE   checkable criteria, one per line
 VERIFY       exact commands or the control-skill path, plus known gotchas
 TIMEBOX      rough cap on runtime; on expiry, return partial findings and stop rather than run on
-FORBIDDEN    no restack, no rebase, no force-push, no merge, no fixes outside scope, plus unit-specific bans
+FORBIDDEN    no PR retargets or merges, no rebase, no force-push, no fixes outside scope,
+             plus unit-specific bans
 REPORT       status, branch, head SHA, PRs, verdict, what you actually ran, deviations,
              suggested follow-ups
 STANDING     <preferences.md pasted verbatim>
@@ -76,9 +77,9 @@ A dependency is a context relay, not just ordering. Undeclared upstream context 
 
 #### Stack safety
 
-- The frontier is a computed object, never narrative. Recompute `frontier.json` with `orch frontier set --repo <stacker-clone>` after every merge and stack mutation: ordered PR list, branch names, head SHAs, a generation number, the lowest unmerged PR. A stack is a chain of plain branches, each PR's base the branch below it. GitHub base refs drift mid-restack, so the stacker's local branch chain is authoritative, cross-checked against `gh pr list --json number,headRefName,baseRefName,headRefOid,state`. When the two disagree, the command errors rather than guessing.
-- Exactly one stacker per stack may restack (`git rebase --update-refs`, base retargets, `git push --force-with-lease`), serialized within its stack. Record the holder in the standing orders. Restacks run in the stacker's own worktree, one stack at a time.
-- Workers never rebase and never restack. Babysitters follow `playbooks/babysit.md`, one per stack, scoped to one immutable frontier generation. They report conflicts to the stacker rather than restacking.
+- The frontier is a computed object, never narrative. Recompute `frontier.json` with `orch frontier set --repo <stacker-clone>` after every merge and stack mutation: ordered PR list, branch names, head SHAs, a generation number, the lowest unmerged PR. A stack is a chain of plain branches, each PR's base the branch below it. GitHub base refs drift mid-rebase, so the stacker's local branch chain is authoritative, cross-checked against `gh pr list --json number,headRefName,baseRefName,headRefOid,state`. When the two disagree, the command errors rather than guessing.
+- Exactly one stacker per stack may mutate topology (chain rebases with `git rebase --update-refs`, `git push --force-with-lease`, base retargets, merges), serialized within its stack. Record the holder in the standing orders. Chain rebases run in the stacker's own worktree, one stack at a time.
+- Workers never rebase and never retarget or merge PRs. Babysitters follow `playbooks/babysit.md`, one per stack, scoped to one immutable frontier generation. They report conflicts to the stacker rather than rebasing.
 - PR closes and retargets go through the stacker only. Closing a base PR orphans every chain above it. Merges and stack surgery are units with briefs like any other. A merge unit runs only under the user's explicit merge instruction in this session.
 - One retro watcher follows merged PRs for reverts, post-merge CI breaks, and orphaned follow-ups.
 
@@ -104,7 +105,7 @@ A unit is not done until its output is externalized the moment it lands, never b
 
 Reaches the human, batched into the status page rather than per item: irreversible actions (force-push to shared branches, deploys, deletions, closing someone else's PR, any merge the user has not explicitly asked for in this session), genuine product or preference calls no experiment settles, a standing order that contradicts observed reality, a program-level dead end that survived a replan. Park each as a `gates.md` entry before asking, and route work around it.
 
-Never reaches the human: frontier nudges, restack mechanics, retries, CI flake triage, review-thread triage, format fixes, scope the brief already forbids (refuse and continue), and "should I keep going". When in doubt, act and log.
+Never reaches the human: frontier nudges, rebase mechanics, retries, CI flake triage, review-thread triage, format fixes, scope the brief already forbids (refuse and continue), and "should I keep going". When in doubt, act and log.
 
 Mid-run discoveries fix only what blocks the frontier. Everything else parks in follow-ups. At this fan-out a small scope leak multiplies into PRs nobody asked for.
 
