@@ -7,7 +7,7 @@ import { join, relative } from "node:path";
 const root = join(import.meta.dirname, "..");
 const skipDirs = new Set([".git", "node_modules", "docs", "automations"]);
 const skipUpstreamAgents = join(root, "agents");
-const skipFiles = new Set(["CLAUDE-PORT.md", "README.md", "UPDATING.md", "check-port.mjs", "plugin.json", "LICENSE"]);
+const skipFiles = new Set(["CLAUDE-PORT.md", "README.md", "UPDATING.md", "UPDATE-SUMMARY.md", "check-port.mjs", "plugin.json", "LICENSE"]);
 
 const banned = [
   [/\bTask tool\b|\bTask\(|`Task` call/, "Cursor Task tool (use the Agent tool)"],

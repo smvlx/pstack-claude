@@ -27,6 +27,7 @@ Hand-ported from upstream's new text:
 - New skills `sharpen` and `in-your-own-words` came in unchanged. Neither has Cursor-isms.
 - `port/agents/poteto-agent.md`. Carries upstream's "if the mode file is missing, stop and tell your parent". The `~/.cursor/plugins/` search does not apply.
 - `scripts/check-port.mjs`. New patterns for `cursor-grok-*` and `composer-*`, `inherit-parent`, per-spawn speed (`fast or standard speed`, `-fast` slugs), and Origin forge selection.
+- `scripts/check-port.mjs` also skips `UPDATE-SUMMARY.md`. The summary names banned tokens on purpose, and `apply-update.sh` runs the gate before it deletes the summary.
 - `CLAUDE-PORT.md`. Notes upstream's new `docs/harness/claude-code.md` as reference that this port does not use.
 - No new model role upstream, so `models.md` and `setup-pstack` are unchanged.
 
